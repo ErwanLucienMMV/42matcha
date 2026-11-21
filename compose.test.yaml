@@ -1,0 +1,18 @@
+services:
+  backend-test:
+    image: maven:3.9-eclipse-temurin-21@sha256:99e61abcff91a9b1333463bd8451fb18495d6eba9250ac66a338b518f8278320
+    working_dir: /workspace
+    volumes:
+      - ./backend:/source:ro
+      - maven-test-cache:/root/.m2
+    environment:
+      TEST_DATABASE_URL: jdbc:postgresql://database:5432/${DATABASE_NAME:-matcha}
+      TEST_DATABASE_USER: ${DATABASE_USER:-matcha}
+      TEST_DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
+    command: [sh, -c, 'cp -a /source/. /workspace/ && mvn -B -ntp verify']
+    depends_on:
+      database:
+        condition: service_healthy
+
+volumes:
+  maven-test-cache:
