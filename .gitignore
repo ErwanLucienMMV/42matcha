@@ -1,6 +1,8 @@
 # Private working checklist and source-review artifacts
 /LOCAL_CHECKLIST.txt
 /.local-subject-pages/
+/.tools/
+/.local-validation/
 
 # Local configuration and credentials
 .env
