@@ -26,7 +26,15 @@ public final class App {
             response.type("application/json; charset=utf-8");
             response.header("X-Content-Type-Options", "nosniff");
             response.header("Cache-Control", "no-store");
+            if (!request.requestMethod().equals("GET") && !request.requestMethod().equals("HEAD") && !request.requestMethod().equals("OPTIONS")) {
+                String origin = request.headers("Origin");
+                if (origin != null && !origin.equals(config.appUrl())) throw ApiError.forbidden("This request came from another site.");
+            }
+            if (request.contentLength() > 8 * 1024 * 1024) throw new ApiError(413, "request_too_large", "This request is too large.");
         });
+        Api api = new Api(http, database, json);
+        Accounts accounts = new Accounts(config);
+        accounts.registration(api);
         http.get("/api/health", (request, response) -> Map.of("status", "ok"), json::writeValueAsString);
         http.get("/api/ready", (request, response) -> {
             boolean ready = database.healthy();
