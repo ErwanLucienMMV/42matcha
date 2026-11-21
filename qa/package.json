@@ -1,0 +1,6 @@
+{
+  "name": "matcha-acceptance",
+  "private": true,
+  "scripts": { "test": "playwright test" },
+  "devDependencies": { "@playwright/test": "1.65.1" }
+}
