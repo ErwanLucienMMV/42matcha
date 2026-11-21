@@ -7,9 +7,10 @@ import spark.Service;
 public final class App {
     private App() {}
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Config config = Config.from(System.getenv());
         Database database = new Database(config);
+        Migrations.apply(database);
         Service http = create(config, database);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             http.stop();
@@ -33,6 +34,11 @@ public final class App {
             return Map.of("status", ready ? "ready" : "unavailable");
         }, json::writeValueAsString);
         http.notFound((request, response) -> json.writeValueAsString(Map.of("error", "Route not found")));
+        http.exception(ApiError.class, (error, request, response) -> {
+            response.status(error.status);
+            try { response.body(json.writeValueAsString(Map.of("error", error.getMessage(), "code", error.code))); }
+            catch (com.fasterxml.jackson.core.JsonProcessingException impossible) { response.body("{\"error\":\"Request rejected\"}"); }
+        });
         http.exception(Exception.class, (error, request, response) -> {
             response.status(500);
             response.body("{\"error\":\"An unexpected error occurred\"}");
