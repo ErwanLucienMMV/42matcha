@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+# Every project commit is a milestone; use real time for the minimum interval.
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+    previous=$(git log -1 --format=%ct)
+    now=$(date +%s)
+    elapsed=$((now - previous))
+    if [ "$elapsed" -lt 3600 ]; then
+        remaining=$((3600 - elapsed))
+        printf 'Commit blocked: milestone commits must be at least one real hour apart. Wait %s seconds.\n' "$remaining" >&2
+        exit 1
+    fi
+fi

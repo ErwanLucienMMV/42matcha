@@ -1,0 +1,28 @@
+# Private working checklist and source-review artifacts
+/LOCAL_CHECKLIST.txt
+/.local-subject-pages/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build output, dependencies and local tooling
+**/target/
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+.idea/
+.vscode/
+*.log
+
+# Runtime data and uploaded photos
+/data/
+/uploads/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
