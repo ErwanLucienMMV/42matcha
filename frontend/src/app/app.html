@@ -1,7 +1,13 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <a class="brand" routerLink="/" aria-label="Matcha home"><span class="brand-mark" aria-hidden="true">✳</span>matcha<span class="brand-period">.</span></a>
-  <nav aria-label="Main navigation"><a routerLink="/login">Sign in</a><a class="button small" routerLink="/register">Join Matcha</a></nav>
+  <nav aria-label="Main navigation">
+    @if (session.user()) {
+      <a routerLink="/account">My account</a><button class="button small secondary" (click)="logout()">Sign out</button>
+    } @else {
+      <a routerLink="/login">Sign in</a><a class="button small" routerLink="/register">Join Matcha</a>
+    }
+  </nav>
 </header>
-<main id="main"><router-outlet /></main>
+<main id="main">@if (error()) { <p class="error page-width" role="alert">{{ error() }}</p> }<router-outlet /></main>
 <footer class="site-footer"><a class="brand" routerLink="/">matcha.</a><span>Made for a real connection.</span><span>Take your time. Find your people.</span></footer>

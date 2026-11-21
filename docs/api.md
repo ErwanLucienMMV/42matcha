@@ -25,3 +25,23 @@ never included in API responses or logged. Account links are delivered by email.
 
 Feature endpoints and event contracts are documented as their milestones are
 implemented. Browser authorization is enforced by the API on each operation.
+
+## Accounts
+
+| Method | Path | Body / behavior |
+| --- | --- | --- |
+| POST | `/auth/register` | `username`, `email`, `first_name`, `last_name`, `password`; sends a verification email |
+| POST | `/auth/verify` | Single-use `token`; verifies an account or requested email change |
+| POST | `/auth/login` | `username`, `password`; requires verified email and sets session/CSRF cookies |
+| GET | `/auth/session` | Own account under `user`, or `null`; never returns credential digests |
+| POST | `/auth/logout` | Requires session and `X-XSRF-TOKEN`; invalidates this session |
+| POST | `/auth/forgot-password` | `email`; neutral response, sends a link for an eligible account |
+| POST | `/auth/reset-password` | Single-use `token`, strong `password`; revokes all existing sessions |
+| POST | `/auth/resend-verification` | `email`; neutral response and renewed link for an unverified account |
+
+All listed paths have the `/api` prefix. JSON form limits and origin validation
+apply to public writes as well. Verification links expire after 24 hours, reset
+links after 30 minutes, and sessions after seven days. Raw account tokens are held
+in memory only while composing/sending the email; only SHA-256 digests are stored
+in the token table. SMTP delivery failure aborts the account transaction so the
+operation can be retried. The SMTP inbox necessarily contains the delivered link.

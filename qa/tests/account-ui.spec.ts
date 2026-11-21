@@ -1,0 +1,30 @@
+import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { mailboxLink } from '../helpers';
+
+test('a user can register verify sign in and sign out through Angular', async ({ page, request }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const suffix = randomUUID().replaceAll('-', '').slice(0, 14);
+  const username = `ui_${suffix}`;
+  const email = `${username}@example.test`;
+  await page.goto('/register');
+  await page.getByLabel('First name').fill('Casey');
+  await page.getByLabel('Last name').fill('Tester');
+  await page.getByLabel('Email', { exact: true }).fill(email);
+  await page.getByLabel('Username', { exact: true }).fill(username);
+  await page.getByLabel('Password', { exact: true }).fill('Violet!River42');
+  await page.getByRole('button', { name: 'Create my account' }).click();
+  await expect(page.getByRole('status')).toContainText('Check your email');
+  await page.goto(await mailboxLink(request, email, '/verify'));
+  await expect(page.getByRole('status')).toContainText('verified');
+  await expect(page).toHaveURL(/\/verify$/);
+  await page.goto('/login');
+  await page.getByLabel('Username', { exact: true }).fill(username);
+  await page.getByLabel('Password', { exact: true }).fill('Violet!River42');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Welcome, Casey.');
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Join Matcha', exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});
