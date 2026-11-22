@@ -4,6 +4,8 @@ import { AuthPage, AccountPage } from './auth-page';
 import { signedIn } from './session';
 import { ProfilePage } from './profile-page';
 import { PeoplePage } from './people-page';
+import { PersonPage } from './person-page';
+import { ActivityPage } from './activity-page';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -17,5 +19,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfilePage, canActivate: [signedIn] },
   { path: 'discover', component: PeoplePage, canActivate: [signedIn] },
   { path: 'search', component: PeoplePage, canActivate: [signedIn], data: { search: true } },
+  { path: 'people/:id', component: PersonPage, canActivate: [signedIn] },
+  { path: 'activity', component: ActivityPage, canActivate: [signedIn] },
   { path: '**', redirectTo: '' },
 ];

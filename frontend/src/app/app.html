@@ -5,6 +5,7 @@
     @if (session.user()) {
       <a routerLink="/discover">Discover</a>
       <a routerLink="/search">Search</a>
+      <a routerLink="/activity">Activity</a>
       <a routerLink="/profile">My profile</a><button class="button small secondary" (click)="logout()">Sign out</button>
     } @else {
       <a routerLink="/login">Sign in</a><a class="button small" routerLink="/register">Join Matcha</a>
