@@ -13,6 +13,7 @@ public final class App {
         Migrations.apply(database);
         Service http = create(config, database);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Live.shutdown();
             http.stop();
             http.awaitStop();
             database.close();
@@ -22,6 +23,7 @@ public final class App {
     static Service create(Config config, Database database) {
         ObjectMapper json = new ObjectMapper();
         Service http = Service.ignite().port(config.port()).threadPool(32, 4, 30000);
+        http.webSocket("/api/live", new Live(database, config));
         http.before((request, response) -> {
             response.type("application/json; charset=utf-8");
             response.header("X-Content-Type-Options", "nosniff");

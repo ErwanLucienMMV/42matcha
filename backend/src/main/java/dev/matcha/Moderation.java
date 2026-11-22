@@ -12,6 +12,7 @@ public final class Moderation {
             Sql.update(context.connection(), "DELETE FROM likes WHERE (actor_id=? AND target_id=?) OR (actor_id=? AND target_id=?)", context.userId(), target, target, context.userId());
             Sql.update(context.connection(), "UPDATE notifications SET is_read=TRUE WHERE (recipient_id=? AND actor_id=?) OR (recipient_id=? AND actor_id=?)", context.userId(), target, target, context.userId());
             Sql.update(context.connection(), "UPDATE messages SET is_read=TRUE WHERE (sender_id=? AND recipient_id=?) OR (sender_id=? AND recipient_id=?)", context.userId(), target, target, context.userId());
+            Sql.afterCommit(() -> { Live.publish(context.userId()); Live.publish(target); });
             return Map.of("message", "User blocked. They will no longer appear in discovery, chat or notifications.");
         });
         api.delete("/api/people/:id/block", true, context -> {

@@ -61,7 +61,7 @@ public final class Interactions {
         row.put("likes_me", Sql.number(connection, "SELECT COUNT(*) FROM likes WHERE actor_id=? AND target_id=?", target, viewer) > 0);
         row.put("connected", Relations.connected(connection, viewer, target));
         row.put("own_photo", Sql.number(connection, "SELECT COUNT(*) FROM photos WHERE user_id=? AND is_primary", viewer) > 0);
-        row.put("online", row.get("last_seen") != null && Instant.parse((String) row.get("last_seen")).isAfter(Instant.now().minusSeconds(45)));
+        row.put("online", Live.online(target));
         return row;
     }
 }

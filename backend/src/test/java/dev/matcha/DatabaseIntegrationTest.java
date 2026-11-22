@@ -45,6 +45,17 @@ class DatabaseIntegrationTest {
         }
     }
 
+    @Test void liveActionsRunOnlyAfterSuccessfulCommit() throws Exception {
+        var committed = new java.util.concurrent.atomic.AtomicBoolean();
+        var rolledBack = new java.util.concurrent.atomic.AtomicBoolean();
+        Sql.transaction(database, connection -> { Sql.afterCommit(() -> committed.set(true)); assertFalse(committed.get()); return null; });
+        assertTrue(committed.get());
+        assertThrows(IllegalStateException.class, () -> Sql.transaction(database, connection -> {
+            Sql.afterCommit(() -> rolledBack.set(true)); throw new IllegalStateException("Deliberate rollback");
+        }));
+        assertFalse(rolledBack.get());
+    }
+
     @Test void failedTransactionsLeaveNoPartialWrites() throws Exception {
         String username = "rollback_" + UUID.randomUUID().toString().substring(0, 8);
         assertThrows(IllegalStateException.class, () -> Sql.transaction(database, connection -> {

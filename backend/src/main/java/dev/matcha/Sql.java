@@ -14,6 +14,7 @@ import java.util.Map;
 
 /** Small helpers around explicit SQL; no query generation or object mapping. */
 public final class Sql {
+    private static final ThreadLocal<List<Runnable>> AFTER_COMMIT = new ThreadLocal<>();
     private Sql() {}
 
     public static PreparedStatement statement(Connection connection, String sql, Object... values) throws SQLException {
@@ -67,17 +68,25 @@ public final class Sql {
 
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws Exception; }
 
+    public static void afterCommit(Runnable action) {
+        var actions = AFTER_COMMIT.get();
+        if (actions == null) action.run(); else actions.add(action);
+    }
+
     public static <T> T transaction(Database database, Work<T> work) throws Exception {
+        var actions = new ArrayList<Runnable>();
+        AFTER_COMMIT.set(actions);
         try (Connection connection = database.connection()) {
             connection.setAutoCommit(false);
             try {
                 T result = work.run(connection);
                 connection.commit();
+                for (var action : actions) action.run();
                 return result;
             } catch (Exception error) {
                 connection.rollback();
                 throw error;
             }
-        }
+        } finally { AFTER_COMMIT.remove(); }
     }
 }

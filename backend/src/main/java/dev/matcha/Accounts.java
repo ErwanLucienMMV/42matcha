@@ -104,6 +104,8 @@ public final class Accounts {
         });
         api.post("/api/auth/logout", true, context -> {
             Sql.update(context.connection(), "DELETE FROM sessions WHERE token_hash=?", Secrets.digest(context.request().cookie("matcha_session")));
+            String tokenHash = Secrets.digest(context.request().cookie("matcha_session"));
+            Sql.afterCommit(() -> Live.revokeToken(tokenHash));
             cookie(context.response(), "matcha_session", "", 0, true);
             cookie(context.response(), "XSRF-TOKEN", "", 0, false);
             return Map.of("message", "Signed out.");
@@ -127,6 +129,7 @@ public final class Accounts {
             long id = ((Number) account.get("user_id")).longValue();
             Sql.update(context.connection(), "UPDATE accounts SET password_hash=? WHERE id=?", Passwords.hash(password), id);
             Sql.update(context.connection(), "DELETE FROM sessions WHERE user_id=?", id);
+            Sql.afterCommit(() -> Live.revokeUser(id));
             return Map.of("message", "Your password is updated. Please sign in again.");
         });
         api.post("/api/auth/resend-verification", false, context -> {

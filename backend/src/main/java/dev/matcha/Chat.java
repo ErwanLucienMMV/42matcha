@@ -38,6 +38,7 @@ public final class Chat {
             String body = Input.text(Input.body(context.request()), "body", 1, 4000);
             var message = Sql.one(context.connection(), "INSERT INTO messages(sender_id,recipient_id,body) VALUES (?,?,?) RETURNING id,sender_id,recipient_id,body,is_read,created_at", context.userId(), partner, body);
             Notices.emit(context.connection(), partner, context.userId(), "message");
+            Sql.afterCommit(() -> Live.publish(context.userId()));
             context.response().status(201);
             return message;
         });
@@ -48,6 +49,7 @@ public final class Chat {
             var through = Input.body(context.request()).get("through");
             if (through == null || !through.isIntegralNumber() || !through.canConvertToLong() || through.asLong() < 0) throw ApiError.invalid("Provide a valid read boundary.");
             Sql.update(context.connection(), "UPDATE messages SET is_read=TRUE WHERE sender_id=? AND recipient_id=? AND id<=? AND NOT is_read", partner, context.userId(), through.asLong());
+            Sql.afterCommit(() -> Live.publish(context.userId()));
             return Map.of("message", "Messages marked as read.");
         });
         api.get("/api/updates", true, context -> Map.of(
