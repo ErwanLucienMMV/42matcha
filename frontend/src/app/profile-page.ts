@@ -2,17 +2,19 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiClient, errorMessage } from './api';
 import { Session } from './session';
+import { LocationEditor } from './location-editor';
 
 export interface Photo { id: number; is_primary: boolean; }
 export interface OwnProfile {
   id: number; username: string; first_name: string; last_name: string; email: string;
   gender: string | null; orientation: string; biography: string; tags: string[]; photos: Photo[];
   birth_date: string | null; city: string; latitude: number | null; longitude: number | null; gps_consent: boolean;
+  popularity: number; age: number | null;
 }
 
 @Component({
   selector: 'app-profile-page',
-  imports: [FormsModule],
+  imports: [FormsModule, LocationEditor],
   template: `
     <section class="page-width section-space">
       <p class="eyebrow">Your little corner</p><h1 class="page-title">More than a first impression.</h1>
@@ -49,6 +51,7 @@ export interface OwnProfile {
             <p class="fine-print">{{ photos().length }} of 5 photos</p>
           </aside>
         </div>
+        <app-location-editor [profile]="profile" />
       } @else { <p role="status">Getting your profile…</p> }
     </section>
   `,
