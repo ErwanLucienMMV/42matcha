@@ -29,3 +29,10 @@ export async function verifiedUser(request: APIRequestContext) {
   expect(response.status(), await response.text()).toBe(200);
   return user;
 }
+
+export async function signIn(request: APIRequestContext, user: { username: string; password: string }) {
+  const response = await request.post('/api/auth/login', { data: user });
+  expect(response.status(), await response.text()).toBe(200);
+  const csrf = (await request.storageState()).cookies.find(cookie => cookie.name === 'XSRF-TOKEN')!.value;
+  return { headers: { 'X-XSRF-TOKEN': csrf } };
+}
