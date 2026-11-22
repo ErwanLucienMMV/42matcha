@@ -60,6 +60,8 @@ public final class Profiles {
         if (row == null) throw ApiError.missing();
         row.put("tags", Sql.rows(connection, "SELECT t.name FROM tags t JOIN profile_tags pt ON pt.tag_id=t.id WHERE pt.user_id=? ORDER BY t.name", id).stream().map(tag -> tag.get("name")).toList());
         row.put("photos", Sql.rows(connection, "SELECT id,is_primary FROM photos WHERE user_id=? ORDER BY is_primary DESC,id", id));
+        row.put("popularity", Preferences.popularity(connection, id));
+        row.put("age", row.get("birth_date") == null ? null : java.time.Period.between(java.time.LocalDate.parse((String) row.get("birth_date")), java.time.LocalDate.now(java.time.ZoneOffset.UTC)).getYears());
         return row;
     }
 }

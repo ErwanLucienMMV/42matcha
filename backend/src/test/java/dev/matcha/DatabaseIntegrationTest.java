@@ -56,6 +56,27 @@ class DatabaseIntegrationTest {
         }
     }
 
+    @Test void popularityCountsDistinctVisitorsAndCurrentLikes() throws Exception {
+        Sql.transaction(database, connection -> {
+            String suffix = UUID.randomUUID().toString().substring(0, 8);
+            long target = Sql.number(connection, "INSERT INTO accounts(username,email,first_name,last_name,password_hash) VALUES (?,?,'Score','Target','test-only') RETURNING id", "score_" + suffix, "score_" + suffix + "@example.test");
+            for (int i = 0; i < 21; i++) {
+                String name = "visitor_" + suffix + "_" + i;
+                long visitor = Sql.number(connection, "INSERT INTO accounts(username,email,first_name,last_name,password_hash) VALUES (?,?,'Score','Visitor','test-only') RETURNING id", name, name + "@example.test");
+                Sql.update(connection, "INSERT INTO likes(actor_id,target_id) VALUES (?,?)", visitor, target);
+                if (i == 0) {
+                    Sql.update(connection, "INSERT INTO visits(visitor_id,target_id) VALUES (?,?) ON CONFLICT(visitor_id,target_id) DO UPDATE SET visited_at=CURRENT_TIMESTAMP", visitor, target);
+                    Sql.update(connection, "INSERT INTO visits(visitor_id,target_id) VALUES (?,?) ON CONFLICT(visitor_id,target_id) DO UPDATE SET visited_at=CURRENT_TIMESTAMP", visitor, target);
+                    assertEquals(6, Preferences.popularity(connection, target));
+                }
+            }
+            assertEquals(100, Preferences.popularity(connection, target));
+            Sql.update(connection, "DELETE FROM likes WHERE target_id=?", target);
+            assertEquals(1, Preferences.popularity(connection, target));
+            return null;
+        });
+    }
+
     @Test void databaseEnforcesCaseInsensitiveIdentityAndPhotoLimit() throws Exception {
         Sql.transaction(database, connection -> {
             long id = Sql.number(connection, "INSERT INTO accounts (username,email,first_name,last_name,password_hash) VALUES ('Photo_Test','photo@example.test','Photo','Tester','test-only') RETURNING id");
