@@ -97,6 +97,9 @@ class DatabaseIntegrationTest {
             assertEquals(far, ((Number) unblocked.getFirst().get("id")).longValue());
             assertFalse(unblocked.getFirst().containsKey("email"));
             assertFalse(unblocked.getFirst().containsKey("latitude"));
+            var search = Matching.find(connection, me, Matching.Filter.defaults(), false, java.util.List.of("hiking"));
+            assertTrue(search.items().size() > unblocked.size());
+            assertTrue(Matching.find(connection, me, Matching.Filter.defaults(), false, java.util.List.of("hiking", "not-shared")).items().isEmpty());
             return null;
         });
     }

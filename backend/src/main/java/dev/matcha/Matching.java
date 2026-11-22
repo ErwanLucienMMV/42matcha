@@ -32,6 +32,10 @@ public final class Matching {
         """;
 
     public static Results find(Connection connection, long userId, Filter filter, boolean compatibleOnly) throws SQLException {
+        return find(connection, userId, filter, compatibleOnly, List.of());
+    }
+
+    public static Results find(Connection connection, long userId, Filter filter, boolean compatibleOnly, List<String> tags) throws SQLException {
         Preferences.requireEligible(connection, userId);
         String compatibility = compatibleOnly ? """
             AND (me.orientation='bisexual' OR (me.orientation='heterosexual' AND me.gender<>p.gender) OR (me.orientation='homosexual' AND me.gender=p.gender))
@@ -45,14 +49,20 @@ public final class Matching {
             case "common_tags" -> "x.common_tags " + direction(filter.direction(), "DESC");
             default -> throw ApiError.invalid("Choose a valid sort order.");
         };
+        String tagFilter = tags.isEmpty() ? "" : " AND x.id IN (SELECT pt.user_id FROM profile_tags pt JOIN tags t ON t.id=pt.tag_id WHERE t.name IN ("
+                + String.join(",", java.util.Collections.nCopies(tags.size(), "?")) + ") GROUP BY pt.user_id HAVING COUNT(DISTINCT t.name)=?)";
         String sql = CANDIDATES + compatibility + """
             ) SELECT x.* FROM candidates x
               WHERE x.age BETWEEN ? AND ? AND x.popularity BETWEEN ? AND ?
                 AND x.city ILIKE ? AND x.distance_km<=? AND x.common_tags>=?
-            """ + " ORDER BY " + sort + ",x.id ASC LIMIT ? OFFSET ?";
-        Object[] values = { userId, filter.minAge(), filter.maxAge(), filter.minPopularity(), filter.maxPopularity(),
-                "%" + escapeLike(filter.city()) + "%", filter.maxDistance(), filter.minCommon(), filter.size() + 1, (filter.page() - 1) * filter.size() };
-        var rows = Sql.rows(connection, sql, values);
+            """ + tagFilter + " ORDER BY " + sort + ",x.id ASC LIMIT ? OFFSET ?";
+        var values = new ArrayList<Object>(List.of(userId, filter.minAge(), filter.maxAge(), filter.minPopularity(), filter.maxPopularity(),
+                "%" + escapeLike(filter.city()) + "%", filter.maxDistance(), filter.minCommon()));
+        values.addAll(tags);
+        if (!tags.isEmpty()) values.add(tags.size());
+        values.add(filter.size() + 1);
+        values.add((filter.page() - 1) * filter.size());
+        var rows = Sql.rows(connection, sql, values.toArray());
         boolean more = rows.size() > filter.size();
         var page = new ArrayList<>(rows.subList(0, Math.min(filter.size(), rows.size())));
         for (var row : page) row.put("tags", Sql.rows(connection, "SELECT t.name FROM tags t JOIN profile_tags pt ON pt.tag_id=t.id WHERE pt.user_id=? ORDER BY t.name LIMIT 5", row.get("id")).stream().map(tag -> tag.get("name")).toList());
