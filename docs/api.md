@@ -77,3 +77,13 @@ Query parameters: `min_age`, `max_age` (18-120), `min_popularity`,
 `sort` (`recommended`, `age`, `location`, `popularity`, `common_tags`), `direction`
 (`asc`, `desc`, or default), `page` (from 1), and `size` (1-50, default 20).
 Reversed ranges, invalid sort choices and invalid pagination are rejected.
+
+## Advanced search
+
+`GET /api/search` accepts the same range, location, ordering and pagination
+parameters, plus comma-separated `tags` (up to ten). Tags are normalized to
+lowercase without a leading `#`; results must contain **all** selected tags.
+Criteria combine with AND. Empty search criteria show eligible unblocked profiles.
+Unlike preference-based suggestions, explicit search can find any complete,
+verified, unblocked profile that matches the selected criteria. Own profile
+completion and approximate location are still required.

@@ -48,3 +48,8 @@ common-interest count and choose ascending/descending order. Filters combine age
 and popularity ranges, city/neighborhood text, maximum distance and minimum
 shared-tag count. SQL values are bound parameters; sort fields and directions
 come from allowlists. Pagination includes an ID tie-break and a `has_more` flag.
+
+Advanced search combines the same filters with up to ten specific interest tags.
+Every selected tag must be present. Search intentionally allows profiles outside
+the suggestion compatibility rules; it still excludes self, incomplete/unverified
+profiles and blocked relationships in either direction.
