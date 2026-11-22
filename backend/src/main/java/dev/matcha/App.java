@@ -11,6 +11,13 @@ public final class App {
         Config config = Config.from(System.getenv());
         Database database = new Database(config);
         Migrations.apply(database);
+        if (args.length > 0) {
+            try {
+                if (!args[0].equals("seed")) throw new IllegalArgumentException("Unknown command. Use seed, or no argument to start the API.");
+                Seed.run(database);
+            } finally { database.close(); }
+            return;
+        }
         Service http = create(config, database);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Live.shutdown();

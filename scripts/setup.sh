@@ -7,5 +7,6 @@ if [ -f .env ]; then
 fi
 umask 077
 secret=$(openssl rand -hex 32)
-sed "s/REPLACE_WITH_A_RANDOM_LOCAL_SECRET/$secret/" .env.example > .env
+demosecret="D!$(openssl rand -hex 24)a7"
+sed -e "s/REPLACE_WITH_A_RANDOM_LOCAL_SECRET/$secret/" -e "s/REPLACE_WITH_A_RANDOM_DEMO_PASSWORD/$demosecret/" .env.example > .env
 printf 'Created ignored .env with a random database password.\n'
