@@ -77,6 +77,38 @@ class DatabaseIntegrationTest {
         });
     }
 
+    @Test void suggestionsApplyMutualPreferencesGeographySortingAndBlocks() throws Exception {
+        Sql.transaction(database, connection -> {
+            String suffix = UUID.randomUUID().toString().substring(0, 8);
+            long me = candidate(connection, "me_" + suffix, "woman", "heterosexual", 48.86, 2.35);
+            long near = candidate(connection, "near_" + suffix, "man", "heterosexual", 48.87, 2.35);
+            long far = candidate(connection, "far_" + suffix, "man", "bisexual", 45.75, 4.85);
+            candidate(connection, "excluded_" + suffix, "woman", "heterosexual", 48.86, 2.35);
+            candidate(connection, "opposite_" + suffix, "man", "homosexual", 48.86, 2.35);
+            Sql.update(connection, "INSERT INTO likes(actor_id,target_id) VALUES (?,?)", me, far);
+            var results = Matching.find(connection, me, Matching.Filter.defaults(), true);
+            assertEquals(near, ((Number) results.items().getFirst().get("id")).longValue());
+            assertEquals(2, results.items().size());
+            var popular = new Matching.Filter(18,120,0,100,"",20050,0,"popularity","desc",1,20);
+            assertEquals(far, ((Number) Matching.find(connection,me,popular,true).items().getFirst().get("id")).longValue());
+            Sql.update(connection, "INSERT INTO blocks(actor_id,target_id) VALUES (?,?)", near, me);
+            var unblocked = Matching.find(connection, me, Matching.Filter.defaults(), true).items();
+            assertEquals(1, unblocked.size());
+            assertEquals(far, ((Number) unblocked.getFirst().get("id")).longValue());
+            assertFalse(unblocked.getFirst().containsKey("email"));
+            assertFalse(unblocked.getFirst().containsKey("latitude"));
+            return null;
+        });
+    }
+
+    private static long candidate(Connection connection, String name, String gender, String orientation, double latitude, double longitude) throws Exception {
+        long id = Sql.number(connection, "INSERT INTO accounts(username,email,first_name,last_name,password_hash,verified) VALUES (?,?,'Test','Candidate','test-only',TRUE) RETURNING id", name, name + "@example.test");
+        Sql.update(connection, "INSERT INTO profiles(user_id,gender,orientation,birth_date,biography,city,latitude,longitude) VALUES (?,?,?,DATE '1996-01-01','A complete test profile','Test city',?,?)", id, gender, orientation, latitude, longitude);
+        Sql.update(connection, "INSERT INTO tags(name) VALUES ('hiking') ON CONFLICT(name) DO NOTHING");
+        Sql.update(connection, "INSERT INTO profile_tags(user_id,tag_id) SELECT ?,id FROM tags WHERE name='hiking'", id);
+        return id;
+    }
+
     @Test void databaseEnforcesCaseInsensitiveIdentityAndPhotoLimit() throws Exception {
         Sql.transaction(database, connection -> {
             long id = Sql.number(connection, "INSERT INTO accounts (username,email,first_name,last_name,password_hash) VALUES ('Photo_Test','photo@example.test','Photo','Tester','test-only') RETURNING id");
