@@ -1,8 +1,9 @@
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header">
+<header class="site-header" [class.authenticated]="!!session.user()">
   <a class="brand" routerLink="/" aria-label="Matcha home"><span class="brand-mark" aria-hidden="true">✳</span>matcha<span class="brand-period">.</span></a>
   <nav aria-label="Main navigation">
     @if (session.user()) {
+      <a routerLink="/discover">Discover</a>
       <a routerLink="/profile">My profile</a><button class="button small secondary" (click)="logout()">Sign out</button>
     } @else {
       <a routerLink="/login">Sign in</a><a class="button small" routerLink="/register">Join Matcha</a>

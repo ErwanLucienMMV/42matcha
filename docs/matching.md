@@ -29,3 +29,22 @@ Users can instead select an approximate city, or manually enter an approximate
 city/neighborhood and coordinates. Coordinates are rounded to two decimal places
 before storage (roughly neighborhood scale); no IP-based location is used.
 Manual entry remains available when GPS is denied, unavailable or fails.
+
+## Discovery compatibility and ranking
+
+Suggested profiles must be complete, verified, different from the current user,
+and unblocked in both directions. Preferences must match in both directions:
+bisexual includes every supported gender; homosexual requires the same gender;
+heterosexual requires a different gender. The supported gender choices are woman,
+man and nonbinary. Unspecified orientation defaults to bisexual.
+
+Recommendations prioritize the same geographic area (within 25 km). Within each
+area group, order by `10 * common_tags + popularity / 10 - min(distance_km,1000) / 20`,
+highest first. Distance and then account ID resolve ties. This uses all three
+required criteria while retaining geographic priority.
+
+Users can override recommendation ordering with age, distance, popularity or
+common-interest count and choose ascending/descending order. Filters combine age
+and popularity ranges, city/neighborhood text, maximum distance and minimum
+shared-tag count. SQL values are bound parameters; sort fields and directions
+come from allowlists. Pagination includes an ID tie-break and a `has_more` flag.

@@ -64,3 +64,16 @@ Photo count and primary selection are serialized on the profile row and also
 protected by database constraints. Image uploads are decoded and re-encoded;
 HTML, SVG, mismatched formats, oversized images and unauthorized operations are
 rejected. Photos are database content, never user-chosen filesystem paths.
+
+## Discovery
+
+`GET /api/discover` requires a complete own profile and returns `items`, `page`
+and `has_more`. Public results omit email, date of birth, stored coordinates and
+credential material. They include age, approximate city/distance, popularity,
+shared-interest count, tags and profile-photo ID.
+
+Query parameters: `min_age`, `max_age` (18-120), `min_popularity`,
+`max_popularity` (0-100), `city`, `max_distance` (1-20050 km), `min_common` (0-10),
+`sort` (`recommended`, `age`, `location`, `popularity`, `common_tags`), `direction`
+(`asc`, `desc`, or default), `page` (from 1), and `size` (1-50, default 20).
+Reversed ranges, invalid sort choices and invalid pagination are rejected.
