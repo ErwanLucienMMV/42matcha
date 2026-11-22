@@ -1,9 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { DatePipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiClient, errorMessage } from './api';
 import type { Photo } from './profile-page';
+import { LiveUpdates } from './live';
 
 interface PublicProfile {
   id: number; username: string; first_name: string; last_name: string; age: number | null;
@@ -43,13 +45,19 @@ interface PublicProfile {
   `,
   styles: `.person-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:34px;align-items:start}.hero-photo{aspect-ratio:4/5;border-radius:24px;overflow:hidden;background:linear-gradient(140deg,#e8e1f2,#c2d4c6);display:grid;place-items:center}.hero-photo img{width:100%;height:100%;object-fit:cover}.hero-photo>span{font-size:9rem;font-family:Georgia,serif;color:#254f3d80}.thumbnails{display:flex;gap:12px;margin-top:16px}.thumbnails button{padding:0;border:0;background:transparent;width:72px;height:82px;border-radius:10px;overflow:hidden}.thumbnails img{width:100%;height:100%;object-fit:cover}.person-detail h1{margin-bottom:8px}.presence{font-size:.9rem;color:var(--green)}.online-dot{display:inline-block;width:8px;height:8px;background:#2a8c52;border-radius:50%;margin-right:8px}.facts{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem;padding:18px 0 28px;border-bottom:1px solid var(--line);margin-bottom:28px}.biography{white-space:pre-wrap;overflow-wrap:anywhere}.relationship{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}.connected{color:var(--green);font-weight:600}.moderation{margin-top:30px}.text-button{border:0;background:transparent;color:var(--green);padding:0;margin:0 20px 12px 0;font-size:.9rem;text-decoration:underline}.danger-text{color:var(--red)}@media(max-width:800px){.person-layout{grid-template-columns:1fr;gap:28px}.hero-photo{max-height:550px}}`,
 })
-export class PersonPage implements OnInit {
+export class PersonPage implements OnInit, OnDestroy {
   private readonly api = inject(ApiClient); private readonly router = inject(Router);
   private readonly id = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
+  private readonly live = inject(LiveUpdates);
+  private subscription?: Subscription;
   readonly person = signal<PublicProfile | null>(null); readonly selected = signal<number | null>(null);
   readonly error = signal(''); readonly message = signal(''); readonly busy = signal(false); readonly reporting = signal(false);
   reason = '';
-  async ngOnInit() { await this.perform(async () => { await this.api.post(`/people/${this.id}/visit`); await this.reload(); }); }
+  async ngOnInit() {
+    this.subscription = this.live.changes.subscribe(() => { if (this.person() && !this.busy()) void this.reload().catch(error => { this.person.set(null); this.error.set(errorMessage(error)); }); });
+    await this.perform(async () => { await this.api.post(`/people/${this.id}/visit`); await this.reload(); });
+  }
+  ngOnDestroy() { this.subscription?.unsubscribe(); }
   async toggleLike() { await this.perform(async () => { const result = this.person()!.i_like ? await this.api.delete<{ message: string }>(`/people/${this.id}/like`) : await this.api.post<{ message: string }>(`/people/${this.id}/like`); this.message.set(result.message); await this.reload(); }); }
   async block() { await this.perform(async () => { await this.api.post(`/people/${this.id}/block`); await this.router.navigateByUrl('/activity'); }); }
   async report() { await this.perform(async () => { this.message.set((await this.api.post<{ message: string }>(`/people/${this.id}/report`, { reason: this.reason })).message); this.reporting.set(false); }); }

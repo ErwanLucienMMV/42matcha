@@ -6,6 +6,7 @@ import { ProfilePage } from './profile-page';
 import { PeoplePage } from './people-page';
 import { PersonPage } from './person-page';
 import { ActivityPage } from './activity-page';
+import { MessagesPage } from './messages-page';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -21,5 +22,7 @@ export const routes: Routes = [
   { path: 'search', component: PeoplePage, canActivate: [signedIn], data: { search: true } },
   { path: 'people/:id', component: PersonPage, canActivate: [signedIn] },
   { path: 'activity', component: ActivityPage, canActivate: [signedIn] },
+  { path: 'messages', component: MessagesPage, canActivate: [signedIn] },
+  { path: 'messages/:id', component: MessagesPage, canActivate: [signedIn] },
   { path: '**', redirectTo: '' },
 ];
