@@ -37,6 +37,7 @@ public final class App {
         accounts.registration(api);
         accounts.authentication(api);
         new Profiles(accounts).register(api);
+        new Photos().register(api);
         http.get("/api/health", (request, response) -> Map.of("status", "ok"), json::writeValueAsString);
         http.get("/api/ready", (request, response) -> {
             boolean ready = database.healthy();

@@ -14,8 +14,7 @@ public final class Input {
         if (request.contentType() == null || !request.contentType().toLowerCase(Locale.ROOT).startsWith("application/json")) {
             throw new ApiError(415, "unsupported_media_type", "Send an application/json request.");
         }
-        byte[] bytes = request.bodyAsBytes();
-        if (bytes.length > 65536) throw new ApiError(413, "request_too_large", "This form is too large.");
+        byte[] bytes = bytes(request, 65536);
         try {
             JsonNode value = JSON.readTree(bytes);
             if (value == null || !value.isObject()) throw ApiError.invalid("Provide a JSON object.");
@@ -25,6 +24,14 @@ public final class Input {
         } catch (java.io.IOException error) {
             throw ApiError.invalid("The request could not be read.");
         }
+    }
+
+    public static byte[] bytes(Request request, int maximum) {
+        try {
+            byte[] bytes = request.raw().getInputStream().readNBytes(maximum + 1);
+            if (bytes.length > maximum) throw new ApiError(413, "request_too_large", "This request is too large.");
+            return bytes;
+        } catch (java.io.IOException error) { throw ApiError.invalid("The request could not be read."); }
     }
 
     public static String text(JsonNode body, String key, int minimum, int maximum) {

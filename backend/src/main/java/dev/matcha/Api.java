@@ -8,6 +8,7 @@ import spark.Route;
 import spark.Service;
 
 public final class Api {
+    public record Image(byte[] content, String mediaType) {}
     public record Context(Request request, Response response, Connection connection, long userId) {}
     @FunctionalInterface public interface Handler { Object run(Context context) throws Exception; }
     @FunctionalInterface public interface Authentication { long check(Request request, Connection connection, boolean write) throws Exception; }
@@ -28,6 +29,16 @@ public final class Api {
     public void post(String path, boolean authenticated, Handler handler) { route("POST", path, authenticated, handler); }
     public void put(String path, boolean authenticated, Handler handler) { route("PUT", path, authenticated, handler); }
     public void delete(String path, boolean authenticated, Handler handler) { route("DELETE", path, authenticated, handler); }
+
+    public void image(String path, Handler handler) {
+        http.get(path, (request, response) -> {
+            Image image = Sql.transaction(database, connection -> (Image) handler.run(new Context(request, response, connection, authentication.check(request, connection, false))));
+            response.type(image.mediaType());
+            response.raw().setContentLength(image.content().length);
+            response.raw().getOutputStream().write(image.content());
+            return null;
+        });
+    }
 
     private void route(String method, String path, boolean authenticated, Handler handler) {
         Route route = (request, response) -> Sql.transaction(database, connection -> {
