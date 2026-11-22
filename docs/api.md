@@ -45,3 +45,22 @@ links after 30 minutes, and sessions after seven days. Raw account tokens are he
 in memory only while composing/sending the email; only SHA-256 digests are stored
 in the token table. SMTP delivery failure aborts the account transaction so the
 operation can be retried. The SMTP inbox necessarily contains the delivered link.
+
+## Own profile and photos
+
+| Method | Path | Body / behavior |
+| --- | --- | --- |
+| GET | `/me` | Own editable account/profile, tags and photo IDs |
+| PUT | `/me` | Names, email, gender, orientation, biography, tags; changing email sends a verification link |
+| GET | `/tags?q=prefix` | Up to 30 reusable interest tags |
+| POST | `/me/photos` | Raw JPEG/PNG body with its matching media type; maximum 5 MiB, 4096 pixels/side and 16 megapixels |
+| POST | `/me/photos/:id/primary` | Select an owned photo as the profile photo |
+| DELETE | `/me/photos/:id` | Remove an owned photo, selecting a replacement primary when necessary |
+| GET | `/photos/:id` | Authenticated binary image; blocked relationships cannot fetch each other's photos |
+
+Authenticated writes require CSRF. Profile updates require 1-10 reusable tags;
+duplicates are normalized. Orientation defaults to bisexual when unspecified.
+Photo count and primary selection are serialized on the profile row and also
+protected by database constraints. Image uploads are decoded and re-encoded;
+HTML, SVG, mismatched formats, oversized images and unauthorized operations are
+rejected. Photos are database content, never user-chosen filesystem paths.

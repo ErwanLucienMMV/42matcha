@@ -3,7 +3,7 @@
   <a class="brand" routerLink="/" aria-label="Matcha home"><span class="brand-mark" aria-hidden="true">✳</span>matcha<span class="brand-period">.</span></a>
   <nav aria-label="Main navigation">
     @if (session.user()) {
-      <a routerLink="/account">My account</a><button class="button small secondary" (click)="logout()">Sign out</button>
+      <a routerLink="/profile">My profile</a><button class="button small secondary" (click)="logout()">Sign out</button>
     } @else {
       <a routerLink="/login">Sign in</a><a class="button small" routerLink="/register">Join Matcha</a>
     }

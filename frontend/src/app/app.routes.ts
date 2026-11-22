@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Welcome } from './welcome';
 import { AuthPage, AccountPage } from './auth-page';
 import { signedIn } from './session';
+import { ProfilePage } from './profile-page';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -12,5 +13,6 @@ export const routes: Routes = [
   { path: 'reset-password', component: AuthPage, data: { mode: 'reset' } },
   { path: 'resend-verification', component: AuthPage, data: { mode: 'resend' } },
   { path: 'account', component: AccountPage, canActivate: [signedIn] },
+  { path: 'profile', component: ProfilePage, canActivate: [signedIn] },
   { path: '**', redirectTo: '' },
 ];
