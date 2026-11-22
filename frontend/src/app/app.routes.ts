@@ -16,5 +16,6 @@ export const routes: Routes = [
   { path: 'account', component: AccountPage, canActivate: [signedIn] },
   { path: 'profile', component: ProfilePage, canActivate: [signedIn] },
   { path: 'discover', component: PeoplePage, canActivate: [signedIn] },
+  { path: 'search', component: PeoplePage, canActivate: [signedIn], data: { search: true } },
   { path: '**', redirectTo: '' },
 ];

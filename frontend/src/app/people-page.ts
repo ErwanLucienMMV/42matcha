@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiClient, errorMessage } from './api';
 
 export interface Person {
@@ -16,8 +16,9 @@ interface Results { items: Person[]; has_more: boolean; page: number; }
   imports: [FormsModule, RouterLink, DecimalPipe],
   template: `
     <section class="page-width section-space">
-      <div class="page-intro"><div><p class="eyebrow">A world in common</p><h1 class="page-title">A little closer to your people.</h1><p class="muted">Shared interests. A familiar neighborhood. A little possibility.</p></div><a class="text-link" routerLink="/profile">Edit my profile</a></div>
+      <div class="page-intro"><div><p class="eyebrow">A world in common</p><h1 class="page-title">{{ searching ? 'Find your common ground.' : 'A little closer to your people.' }}</h1><p class="muted">{{ searching ? 'A shared obsession, a place, a possibility. Find what matters to you.' : 'Shared interests. A familiar neighborhood. A little possibility.' }}</p></div><a class="text-link" routerLink="/profile">Edit my profile</a></div>
       <form #form="ngForm" (ngSubmit)="apply()" class="filters card">
+        @if (searching) { <label class="field">Interest tags<input name="tags" [(ngModel)]="searchTags" maxlength="409" placeholder="coffee, hiking" aria-describedby="tag-help"></label><p class="fine-print" id="tag-help">Separate tags with commas. Results must share every selected interest.</p> }
         <div class="filter-grid">
           <label class="field">Age from<input type="number" name="min_age" [(ngModel)]="filters.min_age" min="18" max="120" required></label>
           <label class="field">Age to<input type="number" name="max_age" [(ngModel)]="filters.max_age" min="18" max="120" required></label>
@@ -30,7 +31,7 @@ interface Results { items: Person[]; has_more: boolean; page: number; }
           <label class="field">City or neighborhood<input name="city" [(ngModel)]="filters.city" maxlength="120" placeholder="Anywhere"></label>
           <label class="field">Sort by<select name="sort" [(ngModel)]="filters.sort"><option value="recommended">Recommended</option><option value="age">Age</option><option value="location">Distance</option><option value="popularity">Popularity</option><option value="common_tags">Common interests</option></select></label>
           <label class="field">Order<select name="direction" [(ngModel)]="filters.direction" [disabled]="filters.sort === 'recommended'"><option value="">Default</option><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
-          <button class="button" [disabled]="form.invalid || loading()">Apply filters</button>
+          <button class="button" [disabled]="form.invalid || loading()">{{ searching ? 'Search people' : 'Apply filters' }}</button>
         </div>
       </form>
       @if (error()) { <div class="error" role="alert">{{ error() }} <a class="text-link" routerLink="/profile">Complete your profile</a></div> }
@@ -57,6 +58,8 @@ interface Results { items: Person[]; has_more: boolean; page: number; }
 })
 export class PeoplePage implements OnInit {
   private readonly api = inject(ApiClient);
+  readonly searching = inject(ActivatedRoute).snapshot.data['search'] === true;
+  searchTags = '';
   readonly people = signal<Person[]>([]); readonly error = signal(''); readonly loading = signal(false); readonly hasMore = signal(false);
   page = 1;
   filters = { min_age: 18, max_age: 120, min_popularity: 0, max_popularity: 100, max_distance: 20050, min_common: 0, city: '', sort: 'recommended', direction: '' };
@@ -67,7 +70,8 @@ export class PeoplePage implements OnInit {
     this.loading.set(true); this.error.set('');
     try {
       const query = new URLSearchParams({ ...Object.fromEntries(Object.entries(this.filters).map(([key, value]) => [key, String(value)])), page: String(this.page) });
-      const results = await this.api.get<Results>('/discover?' + query);
+      if (this.searching && this.searchTags.trim()) query.set('tags', this.searchTags);
+      const results = await this.api.get<Results>((this.searching ? '/search?' : '/discover?') + query);
       this.people.set(results.items); this.hasMore.set(results.has_more);
     } catch (error) { this.error.set(errorMessage(error)); this.people.set([]); }
     finally { this.loading.set(false); }
