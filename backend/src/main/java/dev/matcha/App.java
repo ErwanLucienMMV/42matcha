@@ -44,6 +44,7 @@ public final class App {
         new Search().register(api);
         new Interactions().register(api);
         new Moderation().register(api);
+        new Chat().register(api);
         http.get("/api/health", (request, response) -> Map.of("status", "ok"), json::writeValueAsString);
         http.get("/api/ready", (request, response) -> {
             boolean ready = database.healthy();
