@@ -13,9 +13,11 @@ public final class App {
         Migrations.apply(database);
         if (args.length > 0) {
             try {
-                if (!args[0].equals("seed")) throw new IllegalArgumentException("Unknown command. Use seed, or no argument to start the API.");
-                Seed.run(database);
-                SeedFixtures.run(database);
+                switch (args[0]) {
+                    case "seed" -> { Seed.run(database); SeedFixtures.run(database); }
+                    case "audit-seed" -> SeedAudit.run(database);
+                    default -> throw new IllegalArgumentException("Unknown command. Use seed, audit-seed, or no argument to start the API.");
+                }
             } finally { database.close(); }
             return;
         }
