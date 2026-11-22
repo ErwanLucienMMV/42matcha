@@ -7,6 +7,7 @@ import { PeoplePage } from './people-page';
 import { PersonPage } from './person-page';
 import { ActivityPage } from './activity-page';
 import { MessagesPage } from './messages-page';
+import { NotificationsPage } from './notifications-page';
 
 export const routes: Routes = [
   { path: '', component: Welcome },
@@ -24,5 +25,6 @@ export const routes: Routes = [
   { path: 'activity', component: ActivityPage, canActivate: [signedIn] },
   { path: 'messages', component: MessagesPage, canActivate: [signedIn] },
   { path: 'messages/:id', component: MessagesPage, canActivate: [signedIn] },
+  { path: 'notifications', component: NotificationsPage, canActivate: [signedIn] },
   { path: '**', redirectTo: '' },
 ];

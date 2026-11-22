@@ -34,3 +34,19 @@ Endpoints: `GET /api/connections`, `GET` / `POST /api/chat/:id`,
 `POST /api/chat/:id/read` with `through`, and `GET /api/updates` for own unread
 message/notification counts. History batches contain at most fifty messages and
 a `has_more` flag.
+
+## Notifications
+
+Required events are received likes, profile visits, received messages, reciprocal
+likes creating a connection, and an unlike from a connected user. Events are
+stored in the triggering transaction and delivered to the recipient through the
+same commit-only refresh transport. Unlike suppression and blocks apply both to
+new events and to the recipient's visible history/unread counts.
+
+`GET /api/notifications` returns the latest fifty visible events and `has_more`;
+`before` pages older records. Each event identifies its actor, kind, creation time
+and persisted read state. `POST /api/notifications/:id/read` changes only an event
+owned by the signed-in recipient. `POST /api/notifications/read-all` takes the
+highest displayed `through` ID: arrivals after that boundary stay unread.
+Read changes refresh other tabs. A global notification badge is visible from
+every page, and the history screen supports individual or bounded bulk reading.
