@@ -36,3 +36,12 @@ export async function signIn(request: APIRequestContext, user: { username: strin
   const csrf = (await request.storageState()).cookies.find(cookie => cookie.name === 'XSRF-TOKEN')!.value;
   return { headers: { 'X-XSRF-TOKEN': csrf } };
 }
+
+export async function completeProfile(request: APIRequestContext, user: Awaited<ReturnType<typeof verifiedUser>>, options: { city?: string; gender?: string; orientation?: string; tags?: string[]; latitude?: number; longitude?: number; birth_date?: string } = {}) {
+  const auth = await signIn(request, user);
+  const profile = { first_name: user.first_name, last_name: user.last_name, email: user.email, gender: options.gender || 'woman', orientation: options.orientation || 'bisexual', biography: 'Long walks, good coffee, and a little curiosity.', tags: options.tags || ['coffee', 'hiking'] };
+  expect((await request.put('/api/me', { ...auth, data: profile })).status()).toBe(200);
+  expect((await request.put('/api/me/details', { ...auth, data: { birth_date: options.birth_date || '1995-01-01' } })).status()).toBe(200);
+  expect((await request.put('/api/me/location', { ...auth, data: { city: options.city || 'Paris, FR', latitude: options.latitude ?? 48.86, longitude: options.longitude ?? 2.35, gps_consent: false, source: 'manual' } })).status()).toBe(200);
+  return { auth, profile: await (await request.get('/api/me')).json() };
+}
