@@ -41,7 +41,7 @@ class DatabaseIntegrationTest {
     @Test void migrationsAreIdempotent() throws Exception {
         Migrations.apply(database);
         try (Connection connection = database.connection()) {
-            assertEquals(1, Sql.number(connection, "SELECT COUNT(*) FROM schema_migrations"));
+            assertEquals(2, Sql.number(connection, "SELECT COUNT(*) FROM schema_migrations"));
         }
     }
 

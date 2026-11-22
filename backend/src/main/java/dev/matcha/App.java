@@ -15,6 +15,7 @@ public final class App {
             try {
                 if (!args[0].equals("seed")) throw new IllegalArgumentException("Unknown command. Use seed, or no argument to start the API.");
                 Seed.run(database);
+                SeedFixtures.run(database);
             } finally { database.close(); }
             return;
         }

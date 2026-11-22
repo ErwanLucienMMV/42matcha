@@ -1,0 +1,4 @@
+CREATE TABLE evaluation_seed_batches (
+    version INTEGER PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

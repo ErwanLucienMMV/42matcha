@@ -12,7 +12,7 @@ public final class Migrations {
         Sql.transaction(database, connection -> {
             try (var lock = connection.createStatement()) { lock.execute("SELECT pg_advisory_xact_lock(426242)"); }
             Sql.update(connection, "CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(120) PRIMARY KEY, checksum CHAR(64) NOT NULL, applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP)");
-            for (String file : List.of("V001__initial_schema.sql")) {
+            for (String file : List.of("V001__initial_schema.sql", "V002__evaluation_seed_state.sql")) {
                 byte[] bytes;
                 try (var resource = Migrations.class.getResourceAsStream("/db/" + file)) {
                     if (resource == null) throw new IllegalStateException("Missing migration: " + file);
