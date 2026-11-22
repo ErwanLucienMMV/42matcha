@@ -5,6 +5,13 @@ import java.util.Map;
 
 public final class Notifications {
     public void register(Api api) {
+        api.post("/api/notifications/read-all", true, context -> {
+            var through = Input.body(context.request()).get("through");
+            if (through == null || !through.isIntegralNumber() || !through.canConvertToLong() || through.asLong() < 1) throw ApiError.invalid("Provide the last displayed notification identifier.");
+            Sql.update(context.connection(), "UPDATE notifications SET is_read=TRUE WHERE recipient_id=? AND id<=? AND NOT is_read", context.userId(), through.asLong());
+            Sql.afterCommit(() -> Live.publish(context.userId()));
+            return Map.of("message", "Displayed notifications marked as read.");
+        });
         api.get("/api/notifications", true, context -> {
             String before = context.request().queryParams("before");
             long boundary = before == null ? Long.MAX_VALUE : Input.id(before);
