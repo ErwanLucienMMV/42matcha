@@ -42,6 +42,7 @@ public final class App {
         new Locations().register(api);
         new Discovery().register(api);
         new Search().register(api);
+        new Interactions().register(api);
         http.get("/api/health", (request, response) -> Map.of("status", "ok"), json::writeValueAsString);
         http.get("/api/ready", (request, response) -> {
             boolean ready = database.healthy();

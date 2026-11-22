@@ -1,5 +1,6 @@
 import { APIRequestContext, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
 
 export async function mailboxLink(request: APIRequestContext, email: string, path: string): Promise<string> {
   let link = '';
@@ -44,4 +45,23 @@ export async function completeProfile(request: APIRequestContext, user: Awaited<
   expect((await request.put('/api/me/details', { ...auth, data: { birth_date: options.birth_date || '1995-01-01' } })).status()).toBe(200);
   expect((await request.put('/api/me/location', { ...auth, data: { city: options.city || 'Paris, FR', latitude: options.latitude ?? 48.86, longitude: options.longitude ?? 2.35, gps_consent: false, source: 'manual' } })).status()).toBe(200);
   return { auth, profile: await (await request.get('/api/me')).json() };
+}
+
+export function testPng(): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const named = Buffer.concat([Buffer.from(type), data]); let crc = 0xffffffff;
+    for (const byte of named) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0); }
+    const size = Buffer.alloc(4); size.writeUInt32BE(data.length);
+    const checksum = Buffer.alloc(4); checksum.writeUInt32BE((crc ^ 0xffffffff) >>> 0);
+    return Buffer.concat([size, named, checksum]);
+  };
+  const header = Buffer.alloc(13); header.writeUInt32BE(4, 0); header.writeUInt32BE(4, 4); header[8] = 8; header[9] = 2;
+  const raw = Buffer.alloc(4 * 13, 128); for (let row = 0; row < 4; row++) raw[row * 13] = 0;
+  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), chunk('IHDR',header), chunk('IDAT',deflateSync(raw)), chunk('IEND',Buffer.alloc(0))]);
+}
+
+export async function uploadPhoto(request: APIRequestContext, auth: { headers: { 'X-XSRF-TOKEN': string } }) {
+  const response = await request.post('/api/me/photos', { headers: { ...auth.headers, 'Content-Type': 'image/png' }, data: testPng() });
+  expect(response.status(), await response.text()).toBe(201);
+  return (await response.json()).id as number;
 }
