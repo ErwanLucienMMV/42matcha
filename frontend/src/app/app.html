@@ -14,5 +14,5 @@
     }
   </nav>
 </header>
-<main id="main">@if (error()) { <p class="error page-width" role="alert">{{ error() }}</p> }<router-outlet /></main>
+<main id="main">@if (session.error()) { <div class="error page-width" role="alert">{{ session.error() }} <button class="button small secondary" (click)="session.refresh()">Retry connection</button></div> }@if (error()) { <p class="error page-width" role="alert">{{ error() }}</p> }<router-outlet /></main>
 <footer class="site-footer"><a class="brand" routerLink="/">matcha.</a><span>Made for a real connection.</span><span>Take your time. Find your people.</span></footer>

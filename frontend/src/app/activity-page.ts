@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiClient, errorMessage } from './api';
+import { LiveUpdates } from './live';
 
 interface Activity { id: number; username: string; first_name: string; last_name: string; visited_at?: string; created_at?: string; }
 
@@ -12,8 +14,10 @@ interface Activity { id: number; username: string; first_name: string; last_name
 })
 export class ActivityPage implements OnInit {
   private readonly api = inject(ApiClient);
+  private readonly live = inject(LiveUpdates);
+  private readonly destroy = inject(DestroyRef);
   readonly visitors = signal<Activity[]>([]); readonly likes = signal<Activity[]>([]); readonly blocks = signal<Activity[]>([]); readonly error = signal('');
-  ngOnInit() { void this.load(); }
+  ngOnInit() { void this.load(); this.live.changes.pipe(takeUntilDestroyed(this.destroy)).subscribe(() => void this.load()); }
   async unblock(id: number) { try { await this.api.delete(`/people/${id}/block`); await this.load(); } catch (error) { this.error.set(errorMessage(error)); } }
   private async load() { try { const [visitors, likes, blocks] = await Promise.all([this.api.get<Activity[]>('/me/visitors'),this.api.get<Activity[]>('/me/likes'),this.api.get<Activity[]>('/me/blocks')]); this.visitors.set(visitors); this.likes.set(likes); this.blocks.set(blocks); } catch (error) { this.error.set(errorMessage(error)); } }
 }

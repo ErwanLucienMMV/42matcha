@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Session } from './session';
 
 @Component({
   selector: 'app-welcome',
@@ -10,7 +11,8 @@ import { RouterLink } from '@angular/router';
         <p class="eyebrow">A little curiosity. A real connection.</p>
         <h1>Your kind of people.<br><em>A little closer.</em></h1>
         <p class="lead">Meet someone who shares your corner of the world, your small obsessions, and your sense of possibility.</p>
-        <a class="button" routerLink="/register">Find your connection</a>
+        @if (session.user()) { <a class="button" routerLink="/discover">Discover your people</a> }
+        @else { <a class="button" routerLink="/register">Find your connection</a> }
         <p class="fine-print">Start with who you are. See where it goes.</p>
       </div>
       <div class="welcome-art" aria-hidden="true">
@@ -27,4 +29,4 @@ import { RouterLink } from '@angular/router';
     </section>
   `,
 })
-export class Welcome {}
+export class Welcome { readonly session = inject(Session); }
