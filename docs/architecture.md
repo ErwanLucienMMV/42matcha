@@ -2,7 +2,8 @@
 
 ## Scope
 
-Implement M01-M13 from the README. All bonus milestones are deferred. M00 has
+M01-M13 follow the [complete implementation plan](implementation-plan.md).
+All bonus milestones are deferred. M00 has
 three parts: the existing subject review, the revised execution policy, and this
 architecture/acceptance map. Keep real commit times at least one hour apart.
 
@@ -78,7 +79,7 @@ frontend build variables. Development services bind host ports to loopback.
 
 ## Delivery discipline
 
-Every milestone has at least three substantive commits as listed in the README.
+Every milestone has at least three substantive commits as listed in the plan.
 Parts include implementation and checks; a passing build alone does not complete
 a feature. The private ignored checklist records evidence, commit identifiers,
 remaining work, and the next real eligible commit time. Do not replace missing

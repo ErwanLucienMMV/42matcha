@@ -37,4 +37,4 @@ All paths use `/api`; all are authenticated and writes require CSRF.
 - `GET /me/visitors`, `/me/likes`, `/me/blocks`: own activity and controls.
 
 Notification events are stored transactionally with the triggering interaction;
-the notification milestone adds recipient read/unread controls and live UI.
+recipient read/unread controls and live UI are described in [live updates](realtime.md).

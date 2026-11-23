@@ -87,3 +87,26 @@ Criteria combine with AND. Empty search criteria show eligible unblocked profile
 Unlike preference-based suggestions, explicit search can find any complete,
 verified, unblocked profile that matches the selected criteria. Own profile
 completion and approximate location are still required.
+
+## Age and location
+
+Authenticated routes: `PUT /me/details` accepts `birth_date` (ISO YYYY-MM-DD,
+adult age 18-120). `GET /locations?q=...` searches bundled city names;
+`GET /locations/nearest?latitude=...&longitude=...` finds a city near a supplied
+point. `PUT /me/location` accepts `city`, `latitude`, `longitude`, boolean
+`gps_consent` and `source` (`manual` or `gps`). GPS source requires consent.
+Coordinates are rounded to two decimal places and omitted from public DTOs.
+
+## Interactions, messages and notifications
+
+See [relationship routes](relationships.md) for profile consultations, likes,
+blocks, reports and own activity. See [live routes](realtime.md) for chat,
+connections, unread counts, notification paging/read boundaries and `/api/live`.
+All routes use `/api`; authenticated writes require X-XSRF-TOKEN.
+
+Errors are JSON with a readable `error` and, for application rejections, a
+stable `code`. Invalid inputs use 400, invalid media types 415, oversize bodies
+413, unauthenticated requests 401, forbidden actions 403, missing/private
+objects 404, identity conflicts 409, and rate limits 429. Successful creation
+uses 201; reads and most updates use 200. Health is `/api/health`; database
+readiness is `/api/ready` (503 while unavailable).
