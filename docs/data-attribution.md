@@ -17,7 +17,9 @@ Source ZIP SHA-256:
 `df53bb7aade75a0fa2160a98405e5e1d014fe4c6f4b0db1d6078b9fd7b50486b`
 
 Derived TSV SHA-256:
-`0e5a229df406c35db04fe494489de4251f94c7caf062d30b6bc286534b4a9d9d`
+`18195bf28062ccf7d3e1698b0d4d2c3a24ae1f082811d5b5fffffd55b7da5686`
+
+This checksum uses the LF line endings enforced by Git, including on Windows.
 
 Users can enter approximate city/neighborhood coordinates manually when a place
 is absent from the gazetteer. Public profiles expose an approximate place and

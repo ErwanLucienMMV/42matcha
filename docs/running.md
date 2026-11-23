@@ -123,3 +123,6 @@ duplicate runners. It catches up at one commit per hour, never backdates missed
 commits. `./scripts/audit-commits.ps1` checks the complete planned sequence plus
 actual history; `-RequireComplete` fails until all 42 actual commits exist and
 the queue is sealed. The runner writes an ignored final audit receipt when done.
+
+See [fresh-source evidence](fresh-verification.md) and [final delivery checks](delivery.md)
+for the reviewed-tree export, final clone, sealed queue and completion receipts.

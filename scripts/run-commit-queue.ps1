@@ -12,10 +12,14 @@ function Invoke-TaskGit([string[]]$Arguments) {
     return $taskResult
 }
 if ($env:GIT_AUTHOR_DATE -or $env:GIT_COMMITTER_DATE) { throw 'Git date overrides are forbidden.' }
+if (($env:GIT_AUTHOR_NAME -and $env:GIT_AUTHOR_NAME -ne 'ErwanLucienMMV') -or
+    ($env:GIT_COMMITTER_NAME -and $env:GIT_COMMITTER_NAME -ne 'ErwanLucienMMV') -or
+    ($env:GIT_AUTHOR_EMAIL -and $env:GIT_AUTHOR_EMAIL -ne 'ultimemmv@gmail.com') -or
+    ($env:GIT_COMMITTER_EMAIL -and $env:GIT_COMMITTER_EMAIL -ne 'ultimemmv@gmail.com')) { throw 'Unexpected Git identity environment override.' }
 if ((Invoke-TaskGit -Arguments @('config', 'user.name')) -ne 'ErwanLucienMMV' -or
     (Invoke-TaskGit -Arguments @('config', 'user.email')) -ne 'ultimemmv@gmail.com') { throw 'Unexpected commit identity.' }
 if ((Invoke-TaskGit -Arguments @('config', 'core.hooksPath')) -ne '.githooks') { throw 'The spacing hook must be active.' }
-$taskLock = [IO.File]::Open((Join-Path $taskDirectory 'runner.lock'), 'OpenOrCreate', 'ReadWrite', 'None')
+$taskLock = if (!$DryRun) { [IO.File]::Open((Join-Path $taskDirectory 'runner.lock'), 'OpenOrCreate', 'ReadWrite', 'None') } else { $null }
 $taskOldIndex = $env:GIT_INDEX_FILE
 try {
     $taskLastWait = ''
@@ -28,7 +32,19 @@ try {
         if ((Invoke-TaskGit -Arguments @('rev-parse', 'HEAD')) -ne $taskState.head) { throw 'HEAD changed outside this queue; review before resuming.' }
         $taskPending = @($taskQueue.checkpoints | Where-Object { $_.part -notin @($taskState.completed | ForEach-Object { $_.part }) })
         if (!$taskPending.Count) {
-            if ($taskQueue.sealed -or $Once -or $DryRun) { Write-Output 'No pending reviewed checkpoints.'; break }
+            if ($taskQueue.sealed -or $Once -or $DryRun) {
+                if ($taskQueue.sealed -and !$DryRun) {
+                    Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue
+                    & (Join-Path $PSScriptRoot 'audit-commits.ps1') -RequireComplete
+                    # The final history now exists, so verify an actual fresh clone of it.
+                    & (Join-Path $PSScriptRoot 'verify-fresh.ps1') -Revision $taskState.head -WebPort 0 -MailPort 0
+                    $taskChecklist = Join-Path $taskRoot 'LOCAL_CHECKLIST.txt'
+                    if (Test-Path -LiteralPath $taskChecklist) {
+                        [IO.File]::AppendAllText($taskChecklist, "`n[x] FINAL DELIVERY VERIFIED $([DateTimeOffset]::Now.ToString('o')): all 42 hourly commits and final fresh clone passed; HEAD $($taskState.head).`n", (New-Object Text.UTF8Encoding $false))
+                    }
+                }
+                Write-Output 'No pending reviewed checkpoints.'; break
+            }
             Start-Sleep -Seconds 30
             continue
         }
@@ -61,11 +77,12 @@ try {
         if ($taskAuthor -ne 'ErwanLucienMMV <ultimemmv@gmail.com>|ErwanLucienMMV <ultimemmv@gmail.com>') { throw 'Post-commit identity verification failed.' }
         $taskState.head = $taskNewHead
         $taskState.completed = @($taskState.completed) + [pscustomobject]@{ part = $taskCheckpoint.part; commit = $taskNewHead; epoch = $taskActualTime }
-        [IO.File]::WriteAllText($taskStatePath, ($taskState | ConvertTo-Json -Depth 8), (New-Object Text.UTF8Encoding $false))
+        [IO.File]::WriteAllText("$taskStatePath.tmp", ($taskState | ConvertTo-Json -Depth 8), (New-Object Text.UTF8Encoding $false))
+        Move-Item -LiteralPath "$taskStatePath.tmp" -Destination $taskStatePath -Force
         Write-Output "$([DateTimeOffset]::Now.ToString('o')) Committed $($taskCheckpoint.part): $taskNewHead."
         if ($Once) { break }
     }
 } finally {
     if ($null -eq $taskOldIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue } else { $env:GIT_INDEX_FILE = $taskOldIndex }
-    $taskLock.Dispose()
+    if ($null -ne $taskLock) { $taskLock.Dispose() }
 }
