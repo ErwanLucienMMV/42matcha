@@ -21,7 +21,7 @@ test('concurrent uploads respect the five-photo limit and ownership', async ({ r
   expect(image.status()).toBe(200);
   expect(image.headers()['content-type']).toContain('image/png');
   expect((await image.body()).subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const anotherUser = await verifiedUser(other);
     const otherAuth = await signIn(other, anotherUser);

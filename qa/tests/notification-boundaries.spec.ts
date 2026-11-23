@@ -3,7 +3,7 @@ import { completeProfile, verifiedUser } from '../helpers';
 
 test('mark-all uses a seen boundary and preserves a concurrent new notification', async ({ request, playwright }) => {
   const actor = await verifiedUser(request); const a = await completeProfile(request, actor);
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); const b = await completeProfile(other, partner);
     await other.post(`/api/people/${a.profile.id}/visit`, b.auth);

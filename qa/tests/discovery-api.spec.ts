@@ -9,7 +9,7 @@ test('discovery requires a complete profile and validates filtering and ordering
   expect((await incomplete.json()).code).toBe('profile_incomplete');
   const city = `Discovery_${actor.username}`;
   await completeProfile(request, actor, { city, gender: 'woman', orientation: 'heterosexual' });
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other);
     const completed = await completeProfile(other, partner, { city, gender: 'man', orientation: 'heterosexual', latitude: 48.87 });

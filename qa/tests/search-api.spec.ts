@@ -4,7 +4,7 @@ import { completeProfile, verifiedUser } from '../helpers';
 test('advanced search combines tags ranges location and stable pagination', async ({ request, playwright }) => {
   const actor = await verifiedUser(request); const city = `Search_${actor.username}`;
   await completeProfile(request, actor, { city });
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     for (let i = 0; i < 2; i++) {
       const user = await verifiedUser(other);

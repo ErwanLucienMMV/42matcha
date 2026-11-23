@@ -4,7 +4,7 @@ import { completeProfile, verifiedUser } from '../helpers';
 test('Angular advanced search applies multiple tags and shows empty results', async ({ page, request, context, playwright }) => {
   const actor = await verifiedUser(request); const city = `Find_${actor.username}`;
   await completeProfile(request, actor, { city });
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); await completeProfile(other, partner, { city });
     await context.addCookies((await request.storageState()).cookies);

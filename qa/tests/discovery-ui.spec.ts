@@ -4,7 +4,7 @@ import { completeProfile, verifiedUser } from '../helpers';
 test('Angular discovery filters real data and fits mobile navigation', async ({ page, request, context, playwright }) => {
   const actor = await verifiedUser(request); const city = `Browse_${actor.username}`;
   await completeProfile(request, actor, { city });
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); await completeProfile(other, partner, { city, gender: 'man' });
     await context.addCookies((await request.storageState()).cookies);

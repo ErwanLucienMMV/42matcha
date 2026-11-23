@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { signIn } from '../helpers';
 
 function demoPassword() {
-  const env = readFileSync(resolve(__dirname, '../../.env'), 'utf8');
+  const env = readFileSync(process.env['MATCHA_ENV_FILE'] || resolve(__dirname, '../../.env'), 'utf8');
   const password = env.match(/^SEED_PASSWORD=([^\r\n]+)$/m)?.[1];
   if (!password || password.startsWith('REPLACE_')) throw new Error('Run the evaluation seed before acceptance checks.');
   return password;

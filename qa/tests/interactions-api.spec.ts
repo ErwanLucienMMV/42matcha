@@ -3,7 +3,7 @@ import { completeProfile, uploadPhoto, verifiedUser } from '../helpers';
 
 test('visits likes mutual connections and unlike follow the relationship rules', async ({ request, playwright }) => {
   const actor = await verifiedUser(request); const actorData = await completeProfile(request, actor);
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); const partnerData = await completeProfile(other, partner);
     const a = actorData.profile.id, b = partnerData.profile.id;

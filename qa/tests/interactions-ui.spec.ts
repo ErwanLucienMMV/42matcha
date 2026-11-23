@@ -3,7 +3,7 @@ import { completeProfile, uploadPhoto, verifiedUser } from '../helpers';
 
 test('Angular profile consultation records visits and supports likes reports and blocks', async ({ page, request, context, playwright }) => {
   const actor = await verifiedUser(request); const a = await completeProfile(request, actor); await uploadPhoto(request, a.auth);
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); const b = await completeProfile(other, partner); await uploadPhoto(other, b.auth);
     await context.addCookies((await request.storageState()).cookies);

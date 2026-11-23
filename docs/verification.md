@@ -45,5 +45,7 @@ version-pinned distributions, not every possible browser/OS combination.
 Rate-limit defaults are restored after the suite. Deliberately invalid requests
 in negative tests are expected rejections. Traces from earlier failed test runs
 are diagnostic artifacts, not passing evidence. Fresh-environment validation and
-the actual commit-history audit are separate delivery gates, documented when
-completed; queued checkpoints are not yet actual commits.
+the actual commit-history audit are separate delivery gates. The [fresh-source
+run](fresh-verification.md) passed the same 58 checks after creating a separate
+500-profile database and recreating its containers. [Final delivery checks](delivery.md)
+distinguish reviewed checkpoints from actual hourly commits.

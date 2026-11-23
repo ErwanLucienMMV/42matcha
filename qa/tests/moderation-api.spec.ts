@@ -3,7 +3,7 @@ import { completeProfile, verifiedUser } from '../helpers';
 
 test('reports are recorded and blocks exclude both directions from browsing and views', async ({ request, playwright }) => {
   const actor = await verifiedUser(request); const a = await completeProfile(request, actor);
-  const other = await playwright.request.newContext({ baseURL: 'http://localhost:8080' });
+  const other = await playwright.request.newContext({ baseURL: process.env['MATCHA_URL'] || 'http://localhost:8080' });
   try {
     const partner = await verifiedUser(other); const b = await completeProfile(other, partner);
     expect((await request.post(`/api/people/${b.profile.id}/report`, { ...a.auth, data: { reason: 'This appears to be a fake account.' } })).status()).toBe(200);
