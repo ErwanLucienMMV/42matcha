@@ -7,6 +7,8 @@ class PasswordsTest {
     @Test void rejectsCommonWordsVariationsAndOversizedUnicode() {
         assertThrows(ApiError.class, () -> Passwords.validate("Password123456!"));
         assertThrows(ApiError.class, () -> Passwords.validate("Football12345!"));
+        assertThrows(ApiError.class, () -> Passwords.validate("Dinosaur12345!"));
+        assertThrows(ApiError.class, () -> Passwords.validate("D1nosaur12345!"));
         assertThrows(ApiError.class, () -> Passwords.validate("aA1!" + "é".repeat(40)));
         assertDoesNotThrow(() -> Passwords.validate("Violet!River42"));
     }

@@ -29,5 +29,7 @@ class ConfigTest {
         assertEquals(8080, config.port());
         assertEquals("http://localhost:8080", config.appUrl());
         assertFalse(config.secureCookies());
+        assertEquals(30, config.registrationLimit());
+        assertFalse(config.toString().contains("test-only"));
     }
 }

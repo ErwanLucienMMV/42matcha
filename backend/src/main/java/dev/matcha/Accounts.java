@@ -25,7 +25,7 @@ public final class Accounts {
 
     public void registration(Api api) {
         api.post("/api/auth/register", false, context -> {
-            limits.check("register:" + context.request().ip(), 30, 3600);
+            limits.check("register:" + ClientAddress.of(context.request()), config.registrationLimit(), 3600);
             JsonNode body = Input.body(context.request());
             String username = Input.text(body, "username", 3, 30);
             if (!username.matches("[A-Za-z0-9_]{3,30}")) throw ApiError.invalid("Use 3-30 letters, numbers, or underscores for your username.");
@@ -46,7 +46,7 @@ public final class Accounts {
             return Map.of("message", "Check your email for a link to verify your account.");
         });
         api.post("/api/auth/verify", false, context -> {
-            limits.check("verify:" + context.request().ip(), 100, 900);
+            limits.check("verify:" + ClientAddress.of(context.request()), 100, 900);
             String token = Input.text(Input.body(context.request()), "token", 43, 43);
             var row = Sql.one(context.connection(), "DELETE FROM account_tokens WHERE token_hash=? AND purpose IN ('verify','email_change') AND expires_at>CURRENT_TIMESTAMP RETURNING user_id,purpose,new_email", Secrets.digest(token));
             if (row == null) throw ApiError.invalid("This verification link has expired or was already used.");
@@ -83,7 +83,7 @@ public final class Accounts {
             return Collections.singletonMap("user", row);
         });
         api.post("/api/auth/login", false, context -> {
-            limits.check("login:" + context.request().ip(), 100, 900);
+            limits.check("login:" + ClientAddress.of(context.request()), 100, 900);
             var body = Input.body(context.request());
             String username = Input.text(body, "username", 3, 30);
             String password = password(body);
@@ -112,14 +112,14 @@ public final class Accounts {
         });
         api.post("/api/auth/forgot-password", false, context -> {
             String email = Input.email(Input.body(context.request()), "email");
-            limits.check("reset-ip:" + context.request().ip(), 50, 3600);
+            limits.check("reset-ip:" + ClientAddress.of(context.request()), 50, 3600);
             limits.check("reset-email:" + Secrets.digest(email), 5, 900);
             var account = Sql.one(context.connection(), "SELECT id FROM accounts WHERE LOWER(email)=? AND verified", email);
             if (account != null) sendToken(context.connection(), ((Number) account.get("id")).longValue(), email, "reset", null);
             return Map.of("message", "If a verified account uses that email, a reset link is on its way.");
         });
         api.post("/api/auth/reset-password", false, context -> {
-            limits.check("reset-use:" + context.request().ip(), 50, 900);
+            limits.check("reset-use:" + ClientAddress.of(context.request()), 50, 900);
             var body = Input.body(context.request());
             String token = Input.text(body, "token", 43, 43);
             String password = password(body);
@@ -134,7 +134,7 @@ public final class Accounts {
         });
         api.post("/api/auth/resend-verification", false, context -> {
             String email = Input.email(Input.body(context.request()), "email");
-            limits.check("resend-ip:" + context.request().ip(), 50, 3600);
+            limits.check("resend-ip:" + ClientAddress.of(context.request()), 50, 3600);
             limits.check("resend-email:" + Secrets.digest(email), 5, 900);
             var account = Sql.one(context.connection(), "SELECT id FROM accounts WHERE LOWER(email)=? AND NOT verified", email);
             if (account != null) sendToken(context.connection(), ((Number) account.get("id")).longValue(), email, "verify", null);

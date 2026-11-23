@@ -1,0 +1,6 @@
+# Local acceptance tests create many accounts from the same loopback address.
+# Use only while running the test suite; normal compose.yaml retains 30/hour.
+services:
+  backend:
+    environment:
+      REGISTRATION_LIMIT: 300

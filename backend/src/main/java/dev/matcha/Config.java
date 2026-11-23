@@ -4,7 +4,7 @@ import java.util.Map;
 
 public record Config(int port, String databaseUrl, String databaseUser,
                      String databasePassword, String appUrl, boolean secureCookies,
-                     String smtpHost, int smtpPort, String mailFrom) {
+                     String smtpHost, int smtpPort, String mailFrom, int registrationLimit) {
     public static Config from(Map<String, String> env) {
         String origin = env.getOrDefault("APP_URL", "http://localhost:8080");
         if (!origin.matches("https?://[^/]+")) {
@@ -14,7 +14,11 @@ public record Config(int port, String databaseUrl, String databaseUser,
                 required(env, "DATABASE_USER"), required(env, "DATABASE_PASSWORD"),
                 origin, Boolean.parseBoolean(env.getOrDefault("COOKIE_SECURE", "false")),
                 env.getOrDefault("SMTP_HOST", "localhost"), port(env, "SMTP_PORT", 1025),
-                env.getOrDefault("MAIL_FROM", "Matcha <hello@matcha.local>"));
+                env.getOrDefault("MAIL_FROM", "Matcha <hello@matcha.local>"), port(env, "REGISTRATION_LIMIT", 30));
+    }
+
+    @Override public String toString() {
+        return "Config[port=" + port + ", appUrl=" + appUrl + ", secureCookies=" + secureCookies + ", databaseCredentials=REDACTED]";
     }
 
     private static String required(Map<String, String> env, String key) {
